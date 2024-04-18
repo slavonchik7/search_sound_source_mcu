@@ -129,24 +129,9 @@ fpmath_t bearing()
 
     i_idx = ((i == 4) ? 0 : i);
     
-#if 0
-    saveabs = ABSF(src_ctx.sinfo[i_idx].delay - src_ctx.sinfo[j].delay);
-    savesin = myasin(saveabs * __peleng_spec_mult);
-    savetest = saveabs * __peleng_spec_mult;
-    savemult = ((fpmath_t)(i + j)) * __peleng_p_div_nsensor;
-    phi = savesin + savemult;
-    fmtdebug("--------------\n\r");
-    fmtdebug("saveabs:%f\n\r", saveabs);
-    fmtdebug("savesin:%f\n\r", savesin);
-    fmtdebug("savemult:%f\n\r", savemult);
-    fmtdebug("savetest:%f\n\r", savetest);
-    fmtdebug("phi:%f\n\r", phi);
-    fmtdebug("--------------\n\r");
-#else
     /* i calculate the angle of the signal (bearing) */
     phi = myasin(MYABS(src_ctx.sinfo[i_idx].delay - src_ctx.sinfo[j].delay) * __peleng_spec_mult)
             + ((fpmath_t)(i + j)) * __peleng_p_div_nsensor;
-#endif
 
     return (phi > FP(0.0)) ? phi : (phi + FP(2.0) * PI);
 }
