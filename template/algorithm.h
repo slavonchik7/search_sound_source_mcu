@@ -20,7 +20,7 @@
 
 #ifndef SOUND_SPEED
     /* the speed is taken at a temperature of 20 degrees Celsius */
-#   define SOUND_SPEED FP(343.0)
+#   define SOUND_SPEED FP(300.0)
 #endif /* SOUND_SPEED */
 
 #ifndef SENSORS_RADIUS
@@ -37,13 +37,13 @@
 #endif /* SRC_MIN_DISTANCE */
 
 #ifndef SRC_MAX_DISTANCE /* in meters */
-#	define SRC_MAX_DISTANCE FP(10.0)
+#	define SRC_MAX_DISTANCE FP(15.0)
 #endif /* SRC_MAX_DISTANCE */
 
 /* the definition specifies with what accuracy
  * 	the coordinates of the sound source will be found */
 #ifndef SRC_SEARCH_EPSI
-#	define SRC_SEARCH_EPSI FP(0.05)
+#	define SRC_SEARCH_EPSI FP(0.1)
 #endif /* SRC_SEARCH_EPSI */
 
 /* NOT TOUCH THIS DEFINE !!!!!!!!!!!!!!!!!!!!!!!!
@@ -113,7 +113,8 @@ no_inline fpmath_t bearing();
 
 no_inline void preparing_values();
 
-
+/* the deviation_src_*() functions are used as an indicator
+ * 	of the deviation of the 'src' point from the real signal source */
 no_inline fpmath_t deviation_src_akhmestafina(const vector2_t *src);
 no_inline fpmath_t deviation_src_ru2377594C1(const vector2_t *src);
 
@@ -139,7 +140,6 @@ typedef struct line_search_arg {
 	vector2_t 		__ls_out 	point;		/* save the found point */
 	fpmath_t		__ls_out 	deviation; 	/* save the value of the error function at this point (deviation) */
 } ls_arg_t;
-
 #undef __ls_in
 #undef __ls_out
 #undef __ls_inout

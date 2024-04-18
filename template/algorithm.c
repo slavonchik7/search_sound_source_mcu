@@ -78,7 +78,6 @@ void bearing_init()
 void bearing_init()
 {
     __peleng_spec_mult = (fpmath_t)((SOUND_SPEED) / (FP(2.0) * SENSORS_RADIUS * mysin(-PI / FP(4.0))));
-    fmtdebug("__peleng_spec_mult:%f\n\r", __peleng_spec_mult);
 }
 #endif
 
@@ -179,12 +178,11 @@ fpmath_t deviation_src_ru2377594C1(const vector2_t *src)
 
     for (i = 1; i < 4; i++) {
     	t += mypow(MYABS(la_norm2(src, &src_ctx.sinfo_sorted[i]->pos)
-    					- zero_idx_p
-						+ SOUND_SPEED * src_ctx.sinfo_sorted[i]->delay
-						), FP(2.0));
+					- (zero_idx_p + SOUND_SPEED * src_ctx.sinfo_sorted[i]->delay)
+					), FP(2.0));
     }
 
-    return mypow(t, FP(0.25)); /* sqrt(sqrt()) == pow(0.25)*/
+    return mypow(t, FP(0.25)); // mypow(t, FP(0.25)); /* sqrt(sqrt()) == pow(0.25)*/
 }
 
 
@@ -194,7 +192,14 @@ fpmath_t deviation_src_ru2377594C1(const vector2_t *src)
 static volatile vector2_t __rs_start = {FP(0.0), FP(0.0)};
 
 
-static fpmath_t (*__deviation) (const vector2_t *src) = NULL;
+/* a pointer to the function that will be used as an error
+ * 	function within the framework of a single calculation
+ * is assigned a pointer to deviation_src_akhmestafina()
+ * 	and deviation_src_ru2377594C1()
+ * for a detailed description, see the comments
+ * 	to the search_sound_source() function */
+static volatile fpmath_t (*__deviation) (const vector2_t *src) = NULL;
+
 
 static no_inline fpmath_t __xline(fpmath_t lp)
 {
@@ -204,7 +209,6 @@ static no_inline fpmath_t __xline(fpmath_t lp)
      *      real: x = -Yr * lp + Xs */
     return -__rs_start.y * lp + __rs_start.x;
 }
-
 
 static no_inline fpmath_t __yline(fpmath_t lp)
 {
@@ -222,7 +226,6 @@ static no_inline fpmath_t __getflp(fpmath_t lp)
 }
 
 
-
 void line_search_point(ls_arg_t *arg)
 {
     /* a vector for storing the values of sin(angle) and cos(angle)
@@ -235,7 +238,7 @@ void line_search_point(ls_arg_t *arg)
 	 *	one, so we check the input values
 	 *	and bring them to the required form */
     fpmath_t lpl = arg->lpl,
-    	lpr = arg->lpr;
+    		 lpr = arg->lpr;
 
     if (lpl > lpr) {
         lpl = arg->lpr;
@@ -243,7 +246,7 @@ void line_search_point(ls_arg_t *arg)
     }
 
     fpmath_t lptr = lpl,
-    	rptr = lpr;
+    		 rptr = lpr;
 
     /* the initial values are taken for fun,
      *  they just have to be larger than any
@@ -259,7 +262,7 @@ void line_search_point(ls_arg_t *arg)
 				break;
 
 			fpmath_t l = __getflp(lpl),
-				r = __getflp(lpr);
+					 r = __getflp(lpr);
 
 			if (l < lmin) {
 				lmin = l;
@@ -287,7 +290,7 @@ void line_search_point(ls_arg_t *arg)
     }
 
 	fpmath_t x = __xline(arg->reslp),
-		y = __yline(arg->reslp);
+			 y = __yline(arg->reslp);
 
 	{
 	    /* i consider the angle (in radians) between the direction
@@ -310,122 +313,41 @@ void line_search_point(ls_arg_t *arg)
 
 #define SRC_SEARCH_STEP 0.1
 
-static void __search_sound_source_1(vector2_t *src, fpmath_t bearing)
+static ls_arg_t __lsarg_sss_first 	= {0,};
+static ls_arg_t __lsarg_sss_min		= {0,};
+static ls_arg_t __lsarg_sss_max		= {0,};
+
+static void __search_sound_source(vector2_t *src, fpmath_t bearing)
 {
-	vector2_t 	src_save;
-	fpmath_t 	dev_min; 	/* deviation */
-	s16			min_count,
-				finish_count;
-
-	ls_arg_t lsarg = {
-		.angle 		= bearing,
-		.r 			= SRC_MIN_DISTANCE,
-
-		/* the values are selected empirically */
-		.lpl 		= FP(-0.5),	/* for first search call */
-		.lpr 		= FP(0.5),		/* for first search call */
-		.dlp 		= FP(0.01),	/* for first search call */
-		.reslp 		= FP(0.0),
-		.point 		= {FP(0.0), FP(0.0)},
-		.deviation	= FP(0.0),
-	};
-
-	/* with each call to the line_search_point() function,
-	 * 	the value of the signal arrival angle will be more accurately determined
-	 * during the first call, you should search in small increments over
-	 * 	a large interval so that the following calls search over
-	 * 	an extremely small interval of the parameter */
-	line_search_point(&lsarg);
-	src_save = lsarg.point;
-	dev_min = 1000000.0; /* any big value for start */
-
-	/* after the first search for points, we reduce the range
-	 * 	and step of the parameter straight in order
-	 * 	to reduce the number of iterations */
-	/* the values are selected empirically */
-	lsarg.lpl = FP(-0.005);
-	lsarg.lpr = FP(0.005);
-	lsarg.dlp = FP(0.0001);
-
-	/* compute what count need to understand,
-	 * 	what current dev_min is global minimum on my line */
-	finish_count = (s16)(FP(1.0) / SRC_SEARCH_STEP);
-	if (finish_count == 0)
-		finish_count = 1;
-
-	min_count = 0;
-	int n = 0;
-	while (lsarg.r <= SRC_MAX_DISTANCE) {
-		lsarg.r += SRC_SEARCH_STEP;
-		line_search_point(&lsarg);
-
-		if (lsarg.deviation < dev_min) {
-			dev_min = lsarg.deviation;
-			src_save = lsarg.point;
-			min_count = 0;
-		} else {
-#if 0
-			if (++min_count == finish_count) {
-				fmtdebug("find on iter:%d\n\r", n);
-				break;
-			}
-#endif
-		}
-		n++;
-	}
-
-	src->x = src_save.x;
-	src->y = src_save.y;
-}
-
-
-static void __search_sound_source_2(vector2_t *src, fpmath_t bearing)
-{
-	ls_arg_t lsarg_min = {
-		.angle 		= bearing,
-
-		/* for first searching */
-		.r 			= (SRC_MAX_DISTANCE - SRC_MIN_DISTANCE) / FP(2.0),
-
-		/* the values are selected empirically */
-		.lpl 		= FP(-0.5),	/* for first search call */
-		.lpr 		= FP(0.5),		/* for first search call */
-		.dlp 		= FP(0.001),	/* for first search call */
-		.reslp 		= FP(0.0),
-		.point 		= {FP(0.0), FP(0.0)},
-		.deviation	= FP(0.0),
-	};
-
-	/* first search for find correctly phi */
-	line_search_point(&lsarg_min);
-	lsarg_min.lpl = FP(-0.001);
-	lsarg_min.lpr = FP(0.001);
-	lsarg_min.dlp = FP(0.0001);
-
-	ls_arg_t lsarg_max = lsarg_min;
 	fpmath_t rmin = SRC_MIN_DISTANCE,
 			 rmax = SRC_MAX_DISTANCE;
-
 	fpmath_t dr;
-	int n = 0;
+
+	/* first search for find correctly phi */
+	line_search_point(&__lsarg_sss_first);
+
+	__lsarg_sss_min.angle = __lsarg_sss_first.angle;
+	__lsarg_sss_max.angle = __lsarg_sss_first.angle;
+	int n=0;
 	while ((rmax - rmin) > SRC_SEARCH_EPSI) {
 		dr = (rmax - rmin) / FP(3.0);
 
-		lsarg_min.r = rmin + dr;
-		lsarg_max.r = rmax - dr;
+		__lsarg_sss_min.r = rmin + dr;
+		__lsarg_sss_max.r = rmax - dr;
 
-		line_search_point(&lsarg_max);
-		line_search_point(&lsarg_min);
+		line_search_point(&__lsarg_sss_min);
+		line_search_point(&__lsarg_sss_max);
 
-		if (lsarg_min.deviation > lsarg_max.deviation)
-			rmin = lsarg_min.r;
+		if (__lsarg_sss_min.deviation > __lsarg_sss_max.deviation)
+			rmin = __lsarg_sss_min.r;
 		else
-			rmax = lsarg_max.r;
+			rmax = __lsarg_sss_max.r;
 
+		n++;
 	}
 
-	src->x = lsarg_min.point.x;
-	src->y = lsarg_min.point.y;
+	src->x = (__lsarg_sss_max.point.x + __lsarg_sss_min.point.x) / FP(2.0);
+	src->y = (__lsarg_sss_max.point.y + __lsarg_sss_min.point.y) / FP(2.0);
 }
 
 void search_sound_source(vector2_t *src, fpmath_t bearing)
@@ -457,13 +379,77 @@ void search_sound_source(vector2_t *src, fpmath_t bearing)
 	 *   and select the required function according to it
 	 * 	*/
 
-	if (MYABS(bearing - (div_180_pi * FP(45.0)))  || 	/* check 45 degree */
-		MYABS(bearing - (div_180_pi * FP(135.0))) ||	/* check 135 degree */
-		MYABS(bearing - (div_180_pi * FP(225.0))) || 	/* check 225 degree */
-		MYABS(bearing - (div_180_pi * FP(315.0))))		/* check 315 degree */
+	/* the vicinity of the signal arrival angle */
+	fpmath_t phi_epsi = ANGLE_TO_RAD(FP(5.0)); /* 5 degree */
+
+	if ((MYABS(bearing - ANGLE_TO_RAD(FP(45.0)))  < phi_epsi) || /* check 45 degree */
+		(MYABS(bearing - ANGLE_TO_RAD(FP(135.0))) < phi_epsi) ||	/* check 135 degree */
+		(MYABS(bearing - ANGLE_TO_RAD(FP(225.0))) < phi_epsi) ||	/* check 225 degree */
+		(MYABS(bearing - ANGLE_TO_RAD(FP(315.0))) < phi_epsi))	/* check 315 degree */
+	{
 		__deviation = deviation_src_ru2377594C1;
-	else
+
+		__lsarg_sss_first.angle = bearing;
+		__lsarg_sss_first.r 	= (SRC_MAX_DISTANCE - SRC_MIN_DISTANCE) / FP(2.0);
+		__lsarg_sss_first.lpl 	= FP(-0.1);
+		__lsarg_sss_first.lpr 	= FP(0.1);
+		__lsarg_sss_first.dlp 	= FP(0.002);
+		__lsarg_sss_first.deviation = FP(0.0);
+		__lsarg_sss_first.point.x = FP(0.0);
+		__lsarg_sss_first.point.y = FP(0.0);
+		__lsarg_sss_first.reslp   = FP(0.0);
+
+		__lsarg_sss_min.lpl 	= FP(-0.005);
+		__lsarg_sss_min.lpr 	= FP(0.005);
+		__lsarg_sss_min.dlp 	= FP(0.0002);
+		__lsarg_sss_min.deviation = FP(0.0);
+		__lsarg_sss_min.point.x = FP(0.0);
+		__lsarg_sss_min.point.y = FP(0.0);
+		__lsarg_sss_min.r 		= FP(0.0);
+		__lsarg_sss_min.reslp   = FP(0.0);
+
+		__lsarg_sss_max.lpl 	= FP(-0.005);
+		__lsarg_sss_max.lpr 	= FP(0.005);
+		__lsarg_sss_max.dlp 	= FP(0.0002);
+		__lsarg_sss_max.deviation = FP(0.0);
+		__lsarg_sss_max.point.x = FP(0.0);
+		__lsarg_sss_max.point.y = FP(0.0);
+		__lsarg_sss_max.r 		= FP(0.0);
+		__lsarg_sss_max.reslp   = FP(0.0);
+
+		__search_sound_source(src, bearing);
+	} else {
 		__deviation = deviation_src_akhmestafina;
 
-	__search_sound_source_2(src, bearing);
+		__lsarg_sss_first.angle = bearing;
+		__lsarg_sss_first.r 	= (SRC_MAX_DISTANCE - SRC_MIN_DISTANCE) / FP(2.0);
+		__lsarg_sss_first.lpl 	= FP(-0.1);
+		__lsarg_sss_first.lpr 	= FP(0.1);
+		__lsarg_sss_first.dlp 	= FP(0.001);
+		__lsarg_sss_first.deviation = FP(0.0);
+		__lsarg_sss_first.point.x = FP(0.0);
+		__lsarg_sss_first.point.y = FP(0.0);
+		__lsarg_sss_first.reslp   = FP(0.0);
+
+		__lsarg_sss_min.lpl 	= FP(-0.001);
+		__lsarg_sss_min.lpr 	= FP(0.001);
+		__lsarg_sss_min.dlp 	= FP(0.0005);
+		__lsarg_sss_min.deviation = FP(0.0);
+		__lsarg_sss_min.point.x = FP(0.0);
+		__lsarg_sss_min.point.y = FP(0.0);
+		__lsarg_sss_min.r 		= FP(0.0);
+		__lsarg_sss_min.reslp   = FP(0.0);
+
+		__lsarg_sss_max.lpl 	= FP(-0.001);
+		__lsarg_sss_max.lpr 	= FP(0.001);
+		__lsarg_sss_max.dlp 	= FP(0.0005);
+		__lsarg_sss_max.deviation = FP(0.0);
+		__lsarg_sss_max.point.x = FP(0.0);
+		__lsarg_sss_max.point.y = FP(0.0);
+		__lsarg_sss_max.r 		= FP(0.0);
+		__lsarg_sss_max.reslp   = FP(0.0);
+
+		__search_sound_source(src, bearing);
+	}
+
 }
