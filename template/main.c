@@ -19,10 +19,22 @@ void initializeTimer();
 void initializeUART();
 void delayMillis(uint32_t ms);
 
-
+int writeByte(int b)
+{
+	UART_SendChar(UART0, (char)b);
+	return 0;
+}
+static vector2_t src = {FP(2.0), FP(5.0)};
 #ifdef TEST_ALGORITHM
-static vector2_t src = {8.0f, 6.0f};
 #if 1
+
+volatile int hardfault = 0;
+
+void hardfault_handler()
+{
+	fmtdebug("----FATAL HARDWARE FUALT----\n\r");
+	while (1) {};
+}
 
 void print_src_ctx_info()
 {
@@ -77,11 +89,7 @@ void prepare_test_data()
 }
 #endif /* TEST_ALGORITHM  */
 
-int writeByte(int b)
-{
-	UART_SendChar(UART0, (char)b);
-	return 0;
-}
+
 
 int main()
 {
@@ -97,18 +105,28 @@ int main()
 	prepare_test_data();
     preparing_values();
 	//print_src_ctx_info();
-    //print_src_ctx_sorted_info();
+    print_src_ctx_sorted_info();
     bearing_init();
     fpmath_t p = bearing();
     fmtdebug("bearing rad:%f,angle:%f\n\r", p, RAD_TO_ANGLE(p));
 #endif /* TEST_ALGORITHM */
 
 
+#if 1
     fmtdebug("start search!\n\r");
     vector2_t msrc;
   	search_sound_source(&msrc, p);
   	fmtdebug("src: (%f,%f)\n\r", msrc.x, msrc.y);
   	fmtdebug("end search!\n\r");
+#else
+  	for (fpmath_t i = FP(1.0); i < 10.0; i += FP(1.0)) {
+  		vector2_t test;
+  		test.x = i / FP(2.0);
+  		test.y = i;
+  		fpmath_t res = deviation_src_ru2377594C1(&test);
+  		fmtdebug("src: (%f, %f), err: %f\r\n", test.x, test.y, res);
+  	}
+#endif
 
   	/* Infinite loop */
   	while(1)
