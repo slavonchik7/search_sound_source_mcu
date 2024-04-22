@@ -1,12 +1,11 @@
 
 
-#define TEST_ALGORITHM
+//#define TEST_ALGORITHM
 
-#ifdef TEST_ALGORITHM
 #include "linealg.h"
 #include "algorithm.h"
-#endif /* TEST_ALGORITHM */
 
+#include "st7789_240_240.h"
 #include "strio.h"
 
 #include "gw1ns4c.h"
@@ -25,8 +24,9 @@ int writeByte(int b)
 	return 0;
 }
 static vector2_t src = {FP(2.0), FP(5.0)};
+
 #ifdef TEST_ALGORITHM
-#if 1
+#if 0
 
 volatile int hardfault = 0;
 
@@ -98,26 +98,25 @@ int main()
   	initializeTimer();
   	initializeUART();
 
+#ifdef TEST_ALGORITHM
   	strio_set_f_putbyte(writeByte);
 
   	//printf("\n\r");
-#ifdef TEST_ALGORITHM
 	prepare_test_data();
     preparing_values();
 	//print_src_ctx_info();
-    print_src_ctx_sorted_info();
+    //print_src_ctx_sorted_info();
     bearing_init();
     fpmath_t p = bearing();
-    fmtdebug("bearing rad:%f,angle:%f\n\r", p, RAD_TO_ANGLE(p));
-#endif /* TEST_ALGORITHM */
+    //fmtdebug("bearing rad:%f,angle:%f\n\r", p, RAD_TO_ANGLE(p));
 
 
 #if 1
-    fmtdebug("start search!\n\r");
+    //fmtdebug("start search!\n\r");
     vector2_t msrc;
   	search_sound_source(&msrc, p);
-  	fmtdebug("src: (%f,%f)\n\r", msrc.x, msrc.y);
-  	fmtdebug("end search!\n\r");
+  	//fmtdebug("src: (%f,%f)\n\r", msrc.x, msrc.y);
+  	//fmtdebug("end search!\n\r");
 #else
   	for (fpmath_t i = FP(1.0); i < 10.0; i += FP(1.0)) {
   		vector2_t test;
@@ -127,15 +126,28 @@ int main()
   		fmtdebug("src: (%f, %f), err: %f\r\n", test.x, test.y, res);
   	}
 #endif
+#endif /* TEST_ALGORITHM */
 
+	st7789_init_new();
+	st7789_set_draw_pos(0, 0);
+	st7789_fill_bw(0);
+	st7789_draw_cube(100, 100, 100, 100, 1);
   	/* Infinite loop */
   	while(1)
   	{
+
+#if 0
   		//fmtdebug("coreClock: %d, bearing: %d\n\r", SystemCoreClock, p++);
   		GPIO_ResetBit(GPIO0, GPIO_Pin_6);
   		delayMillis(500);
   		GPIO_SetBit(GPIO0, GPIO_Pin_6);
   		delayMillis(500);
+#else
+  		//st7789_draw_pixel(100, 100, 1);
+
+  		//st7789_set_draw_pos(0, 0);
+  		//st7789_fill_bw(1);
+#endif
   	}
 
 
@@ -162,7 +174,20 @@ void initializeGPIO() {
 	GPIO_InitTypeDef gpioInitStruct;
 
 	//Select pin7, you can OR pins together to initialize them at the same time
-	gpioInitStruct.GPIO_Pin = GPIO_Pin_7 | GPIO_Pin_6;
+	gpioInitStruct.GPIO_Pin = 	GPIO_Pin_0 |
+								GPIO_Pin_1 |
+								GPIO_Pin_2 |
+								GPIO_Pin_3 |
+								GPIO_Pin_4 |
+								GPIO_Pin_5 |
+								GPIO_Pin_6 |
+								GPIO_Pin_7 |
+								GPIO_Pin_10 |
+								GPIO_Pin_11 |
+								GPIO_Pin_12 |
+								GPIO_Pin_13 |
+								GPIO_Pin_14 |
+								GPIO_Pin_15;
 
 	//Set selected pins as output (see GPIOMode_TypeDef in gw1ns4c_gpio.h)
 	gpioInitStruct.GPIO_Mode = GPIO_Mode_OUT;

@@ -13,20 +13,20 @@ __GLOBAL src_ctx_t src_ctx =
     .sinfo = 
     {
         {
-            .pos = {SENSORS_RADIUS, 0.0f},
-            .delay = 0.0f,
+            .pos = {SENSORS_RADIUS, FP(0.0)},
+            .delay = FP(0.0),
         },
         {
-            .pos = {0.0f, SENSORS_RADIUS},
-            .delay = 0.0f,
+            .pos = {FP(0.0), SENSORS_RADIUS},
+            .delay = FP(0.0),
         },
         {
-            .pos = {-SENSORS_RADIUS, 0.0f},
-            .delay = 0.0f,
+            .pos = {-SENSORS_RADIUS, FP(0.0)},
+            .delay = FP(0.0),
         },
         {
-            .pos = {0.0f, -SENSORS_RADIUS},
-            .delay = 0.0f,
+            .pos = {FP(0.0), -SENSORS_RADIUS},
+            .delay = FP(0.0),
         },
     },
     .sinfo_sorted = {NULL, NULL, NULL, NULL},
@@ -37,10 +37,10 @@ __GLOBAL peleng_ctx_t peleng_ctx =
 {
     .delays = 
     {
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f, 0.0f},
+        {FP(0.0), FP(0.0), FP(0.0), FP(0.0)},
+        {FP(0.0), FP(0.0), FP(0.0), FP(0.0)},
+        {FP(0.0), FP(0.0), FP(0.0), FP(0.0)},
+        {FP(0.0), FP(0.0), FP(0.0), FP(0.0)},
     },
     .i_idx = 0,
     .j_idx = 0,
@@ -96,7 +96,7 @@ void preparing_values()
             dtmin = d;
             imin = i;
         }
-            
+
         if (dtmax < d) {
             dtmax = d;
             imax = i;
