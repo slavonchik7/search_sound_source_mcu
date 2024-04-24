@@ -5,11 +5,17 @@
  *      Author: christmas
  */
 
+/* to save memory, the library uses
+ * 	only black and white (1 bit per point)
+ * the maximum number of bits the controller has is
+ * 	18 bits per point, but I don't need that much */
+
 #ifndef SRC_ST7789_240_240_H_
 #define SRC_ST7789_240_240_H_
 
+#include "compiler.h"
 #include "gw1ns4c.h"
-
+#include "config.h"
 
 #define ST7789_FB_SIZE 7200
 
@@ -54,7 +60,6 @@
 
 
 #define ST7789_MS_DELAY(ms) delayMillis(ms)
-
 
 #define __NPORT(name) 	ST7789_##name##_PORT
 #define __NPIN(name) 	ST7789_##name##_PIN
@@ -119,10 +124,47 @@ void st7789_init_new(void);
 void st7789_send_cmd(uint8_t cmd);
 void st7789_send_data(uint8_t data);
 void st7789_fill_bw(uint8_t bw /* 0 or 1 */); /* black white */
-void st7789_set_draw_pos(uint8_t x, uint8_t y);
 void st7789_update(void);
-void st7789_draw_pixel(uint8_t x, uint8_t y, uint8_t bw);
-void st7789_draw_cube(uint8_t x, uint8_t x_size, uint8_t y, uint8_t y_size, uint8_t bw);
+void st7789_draw_pixel(uint8_t x, uint8_t y);
+void st7789_draw_cube(uint8_t x, uint8_t x_size, uint8_t y, uint8_t y_size);
 void st7789_set_draw_limits(uint8_t x_start, uint8_t x_end, uint8_t y_start, uint8_t y_end);
+
+/* the st7789_draw_circle() function draws a circle with a thickness
+ * 	of 1 pixel with a radius radius and
+ * 	a center at the point (x0, y0) */
+void st7789_draw_circle(uint8_t x0, uint8_t y0, uint8_t radius);
+
+
+/* st7789_draw_circle_bold() is similar to st7789_draw_circle(),
+ * 	but draws a circle with a line thickness of bold pixels
+ *
+ * the step parameter determines in which direction
+ * 	the circle will thicken from the original radius line
+ *
+ * ST7789_CIRCLE_BOLD_STEP_IN - inside, to the center of the circle
+ * ST7789_CIRCLE_BOLD_STEP_OUT - outside the circle from the center */
+#define ST7789_CIRCLE_BOLD_STEP_IN	(-1)
+#define ST7789_CIRCLE_BOLD_STEP_OUT	( 1)
+static void always_inline st7789_draw_circle_bold(
+									uint8_t x0, uint8_t y0,
+									uint8_t radius, uint8_t bold, int8_t step)
+{
+	for (;
+		bold;
+		st7789_draw_circle(x0, y0, radius + (bold--) * step));
+}
+
+static void always_inline st7789_set_draw_pos(uint8_t x, uint8_t y)
+{
+	st7789_set_draw_limits(x, 240, y, 240);
+}
+
+
+/* functions with the names st7789_a_* are similar in their
+ * 	operation to the functions st7789_*, only they work
+ * 	with a pre-limited area in accordance with the definitions
+ * 	LCD_WIND_X0, LCD_WIND_X1, LCD_WIND_Y0, LCD_WIND_Y1 */
+
+void st7789_a_fill_bw(uint8_t bw);
 
 #endif /* SRC_ST7789_240_240_H_ */

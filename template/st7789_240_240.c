@@ -186,7 +186,7 @@ void st7789_init_new(void)
 	  SET_WR;
 	  SET_RD;
 
-	st7789_send_cmd(ST7789_01_SWRESET);
+	  st7789_send_cmd(ST7789_01_SWRESET);
 	  ST7789_MS_DELAY(150);//120mS max
 
 	  st7789_send_cmd(ST7789_11_SLPOUT);
@@ -205,7 +205,6 @@ void st7789_init_new(void)
 	                     //      101b | 16-bit/pixel
 	                     //      110b | 18-bit/pixel   <<<<<
 	                     //      111b | reserved
-	  ST7789_MS_DELAY(10);
 
 	  st7789_send_cmd(ST7789_36_MADCTL);
 	  st7789_send_data(0x08);// YXVL RH--
@@ -234,7 +233,6 @@ void st7789_init_new(void)
 	  st7789_send_data(0x00); //Start LSB
 	  st7789_send_data(0x00); //End MSB End = 249
 	  st7789_send_data(240); //End LSB
-	  ST7789_MS_DELAY(10);
 
 	  // RASET (2Bh): Row Address Set
 	  st7789_send_cmd(ST7789_2B_RASET);
@@ -242,53 +240,20 @@ void st7789_init_new(void)
 	  st7789_send_data(0x00); //Start LSB
 	  st7789_send_data(0); //End MSB End = 319
 	  st7789_send_data(240); //End LSB
-	  ST7789_MS_DELAY(10);
 
 	  st7789_send_cmd(ST7789_13_NORON);
-	  ST7789_MS_DELAY(10);
 
-	  st7789_send_cmd(ST7789_21_INVON);
-	  ST7789_MS_DELAY(10);
+	  st7789_send_cmd(
+#if LCD_DRAW_COLOR_INVERSE
+			  ST7789_20_INVOFF
+#else
+			  ST7789_21_INVON
+#endif
+			  );
 
 	  // DISPON (29h): Display On
 	  st7789_send_cmd(ST7789_29_DISPON);
-	  ST7789_MS_DELAY(10);
 }
-
-void st7789_set_draw_pos(uint8_t x, uint8_t y)
-{
-	//CASET (2Ah): Column Address Set
-	// * The value of XS [15:0] and XE [15:0] are referred when RAMWR
-	//   command comes.
-	// * Each value represents one column line in the Frame Memory.
-	// * XS [15:0] always must be equal to or less than XE [15:0]
-	st7789_send_cmd(ST7789_2A_CASET); //Column address set
-	//Write the parameters for the "column address set" command
-	st7789_send_data(0);     //Start MSB = XS[15:8]
-	st7789_send_data(x); //Start LSB = XS[ 7:0]
-	st7789_send_data(0);      //End LSB   = XE[ 7:0]
-	st7789_send_data(240);        //End MSB   = XE[15:8] 240-1
-
-	//Write the "row address set" command to the LCD
-	//RASET (2Bh): Row Address Set
-	// * The value of YS [15:0] and YE [15:0] are referred when RAMWR
-	//   command comes.
-	// * Each value represents one row line in the Frame Memory.
-	// * YS [15:0] always must be equal to or less than YE [15:0]
-	st7789_send_cmd(ST7789_2B_RASET); //Row address set
-	//Write the parameters for the "row address set" command
-	//Use 1st quadrant coordinates: 0,0 is lower left, 239,319 is upper right.
-	st7789_send_data(0);     //Start MSB = YS[15:8]
-	st7789_send_data(y); //Start LSB = YS[ 7:0]
-	st7789_send_data(0);     //End MSB   = YE[15:8] 320-1
-	st7789_send_data(240);     //End LSB   = YE[ 7:0]
-
-	//Write the "write data" command to the LCD
-	//RAMWR (2Ch): Memory Write
-	st7789_send_cmd(ST7789_2C_RAMWR); //write data
-
-}
-
 
 
 union bits8 {
@@ -316,51 +281,27 @@ void st7789_fill_bw(uint8_t bw)
 
 	for (i = 0; i < ST7789_FB_SIZE; i++)
 	{
-#define _HELPME(n0,n1) \
+#define _HELPME \
 	LCD_WRTIE_WR((bw) ? 0xff : 0x00); \
 	LCD_WRTIE_WR((bw) ? 0xff : 0x00); \
 	LCD_WRTIE_WR((bw) ? 0xff : 0x00);
 
-		_HELPME(0, 1);
-		_HELPME(2, 3);
-		_HELPME(4, 5);
-		_HELPME(6, 7);
+		_HELPME
+		_HELPME
+		_HELPME
+		_HELPME
 	}
 
 	SET_CS;
 }
 
-void st7789_draw_pixel(uint8_t x, uint8_t y, uint8_t bw)
+void st7789_draw_pixel(uint8_t x, uint8_t y)
 {
-	st7789_send_cmd(ST7789_2A_CASET); //Column address set
-	//Write the parameters for the "column address set" command
-	st7789_send_data(0);     //Start MSB = XS[15:8]
-	st7789_send_data(x); //Start LSB = XS[ 7:0]
-	st7789_send_data(0);      //End LSB   = XE[ 7:0]
-	st7789_send_data(x+1);        //End MSB   = XE[15:8] 240-1
-
-	//Write the "row address set" command to the LCD
-	//RASET (2Bh): Row Address Set
-	// * The value of YS [15:0] and YE [15:0] are referred when RAMWR
-	//   command comes.
-	// * Each value represents one row line in the Frame Memory.
-	// * YS [15:0] always must be equal to or less than YE [15:0]
-	st7789_send_cmd(ST7789_2B_RASET); //Row address set
-	//Write the parameters for the "row address set" command
-	//Use 1st quadrant coordinates: 0,0 is lower left, 239,319 is upper right.
-	st7789_send_data(0);     //Start MSB = YS[15:8]
-	st7789_send_data(y); //Start LSB = YS[ 7:0]
-	st7789_send_data(0);     //End MSB   = YE[15:8] 320-1
-	st7789_send_data(y+1);     //End LSB   = YE[ 7:0]
-
-	//Write the "write data" command to the LCD
-	//RAMWR (2Ch): Memory Write
-	st7789_send_cmd(ST7789_2C_RAMWR); //write data
-
+	st7789_set_draw_limits(x, x, y, y);
 	SET_DC;
 	CLR_CS;
-	LCD_WRTIE_WR((bw) ? 0xff : 0x00);
-	LCD_WRTIE_WR(((bw) ? 0xff : 0x00) & 0xf0); /* only low byte chapter */
+	LCD_WRTIE_WR(0xff);
+	LCD_WRTIE_WR(0xf0); /* only low byte chapter */
 	SET_CS;
 }
 
@@ -391,7 +332,7 @@ void st7789_set_draw_limits(uint8_t x_start, uint8_t x_end, uint8_t y_start, uin
 	st7789_send_cmd(ST7789_2C_RAMWR); //write data
 }
 
-void st7789_draw_cube(uint8_t x, uint8_t x_size, uint8_t y, uint8_t y_size, uint8_t bw)
+void st7789_draw_cube(uint8_t x, uint8_t x_size, uint8_t y, uint8_t y_size)
 {
 	x_size += x;
 	y_size += y;
@@ -404,13 +345,13 @@ void st7789_draw_cube(uint8_t x, uint8_t x_size, uint8_t y, uint8_t y_size, uint
 		SET_DC;
 		CLR_CS;
 		for (uint8_t j = y; j < y_size; j += 2) {
-			LCD_WRTIE_WR((bw) ? 0xff : 0x00);
-			LCD_WRTIE_WR((bw) ? 0xff : 0x00);
-			LCD_WRTIE_WR((bw) ? 0xff : 0x00);
+			LCD_WRTIE_WR(0xff);
+			LCD_WRTIE_WR(0xff);
+			LCD_WRTIE_WR(0xff);
 		}
 		if (!flag) {
-			LCD_WRTIE_WR((bw) ? 0xff : 0x00);
-			LCD_WRTIE_WR(((bw) ? 0xff : 0x00) & 0xf0); /* only low byte chapter */
+			LCD_WRTIE_WR(0xff);
+			LCD_WRTIE_WR(0xf0); /* only low byte chapter */
 		}
 		SET_CS;
 	}
@@ -419,5 +360,39 @@ void st7789_draw_cube(uint8_t x, uint8_t x_size, uint8_t y, uint8_t y_size, uint
 void st7789_update(void)
 {
 
+}
+
+void st7789_draw_circle(uint8_t x0, uint8_t y0, uint8_t radius)
+{
+  uint16_t x = (uint16_t)radius;
+  uint16_t y = 0;
+  int16_t radiusError = 1 - (int16_t) x;
+
+  while (x >= y) {
+	//11 O'Clock
+	  st7789_draw_pixel(x0 - y, y0 + x);
+	//1 O'Clock
+	  st7789_draw_pixel(x0 + y, y0 + x);
+	//10 O'Clock
+	  st7789_draw_pixel(x0 - x, y0 + y);
+	//2 O'Clock
+	  st7789_draw_pixel(x0 + x, y0 + y);
+	//8 O'Clock
+	  st7789_draw_pixel(x0 - x, y0 - y);
+	//4 O'Clock
+	  st7789_draw_pixel(x0 + x, y0 - y);
+	//7 O'Clock
+	  st7789_draw_pixel(x0 - y, y0 - x);
+	//5 O'Clock
+	  st7789_draw_pixel(x0 + y, y0 - x);
+
+	y++;
+	if (radiusError < 0) {
+		radiusError += (int16_t)(2 * y + 1);
+	} else {
+	  x--;
+	  radiusError += 2 * (((int16_t) y - (int16_t) x) + 1);
+	}
+  }
 }
 
