@@ -131,7 +131,10 @@ int main()
 	st7789_init_new();
 	st7789_set_draw_pos(0, 0);
 	st7789_fill_bw(0);
-	st7789_draw_cube(100, 100, 100, 100, 1);
+	st7789_draw_circle_bold(120, 120, 120, 4, ST7789_CIRCLE_BOLD_STEP_IN);
+	st7789_draw_cube(LCD_WIND_X0, 120, LCD_WIND_Y0, 120);
+	//st7789_draw_circle_bold(120, 120, 80, 20, ST7789_CIRCLE_BOLD_STEP_IN);
+	//st7789_draw_pixel(100, 100, 1);
   	/* Infinite loop */
   	while(1)
   	{
@@ -143,9 +146,11 @@ int main()
   		GPIO_SetBit(GPIO0, GPIO_Pin_6);
   		delayMillis(500);
 #else
+		//st7789_set_draw_pos(0, 0);
   		//st7789_draw_pixel(100, 100, 1);
-
+  		//st7789_fill_bw(0);
   		//st7789_set_draw_pos(0, 0);
+		//st7789_set_draw_pos(0, 0);
   		//st7789_fill_bw(1);
 #endif
   	}
