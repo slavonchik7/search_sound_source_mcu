@@ -71,6 +71,24 @@
 //#	define STRIO_DBG_BUF_SIZE 512
 #endif /* STRIO_DBG_BUF_SIZE */
 
+
+#ifndef LCD_DRAW_COLOR_INVERSE
+#	define LCD_DRAW_COLOR_INVERSE 0
+#endif
+
+#ifndef LCD_WIND_X0
+#	define LCD_WIND_X0 60
+#endif
+#ifndef LCD_WIND_X1
+#	define LCD_WIND_X1 180
+#endif
+#ifndef LCD_WIND_Y0
+#	define LCD_WIND_Y0 60
+#endif
+#ifndef LCD_WIND_Y1
+#	define LCD_WIND_Y1 180
+#endif
+
 /* ---------- end config defines ---------- */
 
 
