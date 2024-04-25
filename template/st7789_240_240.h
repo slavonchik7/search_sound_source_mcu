@@ -58,7 +58,7 @@
 #define ST7789_D7_PORT	GPIO0
 #define ST7789_D7_PIN	GPIO_Pin_7
 
-
+extern void delayMillis(uint32_t ms);
 #define ST7789_MS_DELAY(ms) delayMillis(ms)
 
 #define __NPORT(name) 	ST7789_##name##_PORT
@@ -109,7 +109,7 @@ typedef struct UB_Font_t {
 }UB_Font;
 
 
-extern const uint16_t Arial_14x22_Table[];
+extern uint16_t Arial_14x22_Table[];
 
 void st7789_write_parall_byte(uint8_t byte);
 
@@ -154,20 +154,21 @@ void st7789_draw_circle(uint8_t x0, uint8_t y0, uint8_t radius);
  * ST7789_CIRCLE_BOLD_STEP_OUT - outside the circle from the center */
 #define ST7789_CIRCLE_BOLD_STEP_IN	(-1)
 #define ST7789_CIRCLE_BOLD_STEP_OUT	( 1)
-static void always_inline st7789_draw_circle_bold(
-									uint8_t x0, uint8_t y0,
-									uint8_t radius, uint8_t bold, int8_t step)
-{
-	for (;
-		bold;
-		st7789_draw_circle(x0, y0, radius + (bold--) * step));
-}
+
 
 static void always_inline st7789_set_draw_pos(uint8_t x, uint8_t y)
 {
 	st7789_set_draw_limits(x, 240, y, 240);
 }
 
+void st7789_draw_circle_bold(uint8_t x0, uint8_t y0,
+							uint8_t radius, uint8_t bold, int8_t step);
+
+#define __ST7789_FONT_WIDTH 	14
+#define __ST7789_FONT_HEIGHT 	22
+
+#define __CH_W					__ST7789_FONT_WIDTH
+#define __CH_H					__ST7789_FONT_HEIGHT
 
 /* functions with the names st7789_a_* are similar in their
  * 	operation to the functions st7789_*, only they work
@@ -176,6 +177,12 @@ static void always_inline st7789_set_draw_pos(uint8_t x, uint8_t y)
 
 void st7789_a_fill_bw(uint8_t bw);
 void st7789_a_draw_char(uint8_t x, uint8_t y, uint8_t ch);
+
+
+/* the function draws a character in the same way as
+ * 	st7789_a_draw_char(), only instead of a character
+ * 	it takes a pointer to a buffer that stores font bits */
+void __st7789_a_draw_char_raw(uint8_t x, uint8_t y, uint16_t *wert);
 
 static void always_inline st7789_a_clear_screen(void)
 {

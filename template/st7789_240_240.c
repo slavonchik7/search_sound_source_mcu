@@ -301,7 +301,8 @@ void st7789_draw_pixel(uint8_t x, uint8_t y)
 	SET_DC;
 	CLR_CS;
 	LCD_WRTIE_WR(0xff);
-	LCD_WRTIE_WR(0xf0); /* only low byte chapter */
+	LCD_WRTIE_WR(0xff); /* only low byte chapter */
+	LCD_WRTIE_WR(0xff);
 	SET_CS;
 }
 
@@ -398,6 +399,15 @@ void st7789_draw_circle(uint8_t x0, uint8_t y0, uint8_t radius)
   }
 }
 
+void st7789_draw_circle_bold(uint8_t x0, uint8_t y0,
+							uint8_t radius, uint8_t bold, int8_t step)
+{
+	register uint8_t r;
+	do {
+		r = radius + bold * step;
+		st7789_draw_circle(x0, y0, r);
+	} while (bold--);
+}
 
 /* the function draws a symbol on the display
  *
@@ -409,23 +419,13 @@ void st7789_draw_circle(uint8_t x0, uint8_t y0, uint8_t radius)
  *	at a time, therefore a font multiple of 2 along the Ox axis
  *	of the display was taken to draw 2 pixels at a time */
 static uint16_t *__ft = Arial_14x22_Table; /* font table ptr */
-static uint8_t __fh = 22; /* font height */
-static uint8_t __fw = 14; /* font width */
-void st7789_a_draw_char(uint8_t x, uint8_t y, uint8_t ch)
+static uint8_t __fh = __ST7789_FONT_HEIGHT; /* font height */
+static uint8_t __fw = __ST7789_FONT_WIDTH; /* font width */
+
+static void __st7789_a_draw_char(uint8_t x, uint8_t y, uint16_t *wert)
 {
-	const uint16_t *wert;
 	uint16_t xn,
 			 yn;
-
-	/* shifting the position of the symbol to the
-	 * 	rendering window specified in the config */
-	x += LCD_WIND_X0;
-	y += LCD_WIND_Y0;
-
-	/* i don't know why this is (ya prosto spizdil)
-	 * see for details: https://cxem.net/mc/mc311.php */
-	ch -= 32;
-	wert = &__ft[ch * __fh];
 
 	for (yn = 0; yn < __fh; yn++) {
 		register uint16_t mask = 0x8000;
@@ -452,6 +452,28 @@ void st7789_a_draw_char(uint8_t x, uint8_t y, uint8_t ch)
 	}
 }
 
+
+/* the function finds a pointer to the raw
+ * 	character data in the font table
+ * 	and causes the character to be drawn */
+void st7789_a_draw_char(uint8_t x, uint8_t y, uint8_t ch)
+{
+	/* shifting the position of the symbol to the
+	 * 	rendering window specified in the config */
+	x += LCD_WIND_X0;
+	y += LCD_WIND_Y0;
+
+	/* i don't know why this is (ya prosto spizdil)
+	 * see for details: https://cxem.net/mc/mc311.php */
+	ch -= 32;
+
+	__st7789_a_draw_char(x, y, &__ft[ch * __fh]);
+}
+
+void __st7789_a_draw_char_raw(uint8_t x, uint8_t y, uint16_t *wert)
+{
+	__st7789_a_draw_char(x, y, wert);
+}
 
 void st7789_a_draw_string(uint8_t x, uint8_t y,
 						uint8_t slen /* byte */, uint8_t *str)
