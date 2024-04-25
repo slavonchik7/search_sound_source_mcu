@@ -89,6 +89,12 @@
 #	define LCD_WIND_YSIZE 120
 #endif
 
+#define LCD_RES_CIRCLE_RADIUS 	120
+#define LCD_RES_CIRCLE_CNTR_X	120
+#define LCD_RES_CIRCLE_CNTR_Y	120
+
+#define LCD_RES_AFTERPOINT 		2
+
 /* ---------- end config defines ---------- */
 
 
