@@ -302,7 +302,7 @@ static ls_arg_t __lsarg_sss_first 	= {0,};
 static ls_arg_t __lsarg_sss_min		= {0,};
 static ls_arg_t __lsarg_sss_max		= {0,};
 
-static void __search_sound_source(vector2_t *src, fpmath_t bearing)
+static void __search_sound_source(vector2_t *src, fpmath_t *bearing)
 {
 	fpmath_t rmin = SRC_MIN_DISTANCE,
 			 rmax = SRC_MAX_DISTANCE;
@@ -333,9 +333,10 @@ static void __search_sound_source(vector2_t *src, fpmath_t bearing)
 
 	src->x = (__lsarg_sss_max.point.x + __lsarg_sss_min.point.x) / FP(2.0);
 	src->y = (__lsarg_sss_max.point.y + __lsarg_sss_min.point.y) / FP(2.0);
+	*bearing = __lsarg_sss_min.angle;
 }
 
-void search_sound_source(vector2_t *src, fpmath_t bearing)
+void search_sound_source(vector2_t *src, fpmath_t *bearing)
 {
 	/* before you start searching for the coordinates
 	 * 	of the sound source, you should determine
@@ -366,15 +367,16 @@ void search_sound_source(vector2_t *src, fpmath_t bearing)
 
 	/* the vicinity of the signal arrival angle */
 	fpmath_t phi_epsi = ANGLE_TO_RAD(FP(5.0)); /* 5 degree */
+	register fpmath_t brng = *bearing;
 
-	if ((MYABS(bearing - ANGLE_TO_RAD(FP(45.0)))  < phi_epsi) || /* check 45 degree */
-		(MYABS(bearing - ANGLE_TO_RAD(FP(135.0))) < phi_epsi) ||	/* check 135 degree */
-		(MYABS(bearing - ANGLE_TO_RAD(FP(225.0))) < phi_epsi) ||	/* check 225 degree */
-		(MYABS(bearing - ANGLE_TO_RAD(FP(315.0))) < phi_epsi))	/* check 315 degree */
+	if ((MYABS(brng - ANGLE_TO_RAD(FP(45.0)))  < phi_epsi) || /* check 45 degree */
+		(MYABS(brng - ANGLE_TO_RAD(FP(135.0))) < phi_epsi) ||	/* check 135 degree */
+		(MYABS(brng - ANGLE_TO_RAD(FP(225.0))) < phi_epsi) ||	/* check 225 degree */
+		(MYABS(brng - ANGLE_TO_RAD(FP(315.0))) < phi_epsi))	/* check 315 degree */
 	{
 		__deviation = deviation_src_ru2377594C1;
 
-		__lsarg_sss_first.angle = bearing;
+		__lsarg_sss_first.angle = *bearing;
 		__lsarg_sss_first.r 	= (SRC_MAX_DISTANCE - SRC_MIN_DISTANCE) / FP(2.0);
 		__lsarg_sss_first.lpl 	= FP(-0.1);
 		__lsarg_sss_first.lpr 	= FP(0.1);
@@ -406,7 +408,7 @@ void search_sound_source(vector2_t *src, fpmath_t bearing)
 	} else {
 		__deviation = deviation_src_akhmestafina;
 
-		__lsarg_sss_first.angle = bearing;
+		__lsarg_sss_first.angle = *bearing;
 		__lsarg_sss_first.r 	= (SRC_MAX_DISTANCE - SRC_MIN_DISTANCE) / FP(2.0);
 		__lsarg_sss_first.lpl 	= FP(-0.1);
 		__lsarg_sss_first.lpr 	= FP(0.1);

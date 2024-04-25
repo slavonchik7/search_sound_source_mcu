@@ -24,7 +24,7 @@
 #endif /* SOUND_SPEED */
 
 #ifndef SENSORS_RADIUS
-#   define SENSORS_RADIUS FP(0.2)
+#   define SENSORS_RADIUS FP(0.15)
 #endif /* SENSORS_RADIUS */
 
 /* ============================================================================ */
@@ -151,6 +151,16 @@ typedef struct line_search_arg {
  * 	at a distance "r" from the origin (0, 0) */
 no_inline void line_search_point(ls_arg_t *arg);
 
-no_inline void search_sound_source(vector2_t *src, fpmath_t bearing);
+
+/* the function searches for the coordinates of
+ * 	the sound source, minimizing the error function
+ *
+ * in the parameter *src, the coordinates of the object
+ *
+ * are stored in the parameter *bearing, the calculated angle
+ * 	of arrival of the signal is transmitted using
+ * 	the bearing() function, also an updated angle
+ * 	value is stored in this parameter (more accurate) */
+no_inline void search_sound_source(vector2_t *src, fpmath_t *bearing);
 
 #endif /* __ALGORITHM_H__ */
