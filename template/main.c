@@ -1,6 +1,6 @@
 
 
-//#define TEST_ALGORITHM
+#define TEST_ALGORITHM
 
 #include "linealg.h"
 #include "algorithm.h"
@@ -99,7 +99,7 @@ int main()
   	initializeUART();
 
 #ifdef TEST_ALGORITHM
-  	strio_set_f_putbyte(writeByte);
+  	//strio_set_f_putbyte(writeByte);
 
   	//printf("\n\r");
 	prepare_test_data();
@@ -132,9 +132,9 @@ int main()
 	st7789_set_draw_pos(0, 0);
 	st7789_fill_bw(0);
 	st7789_draw_circle_bold(120, 120, 120, 4, ST7789_CIRCLE_BOLD_STEP_IN);
-	st7789_draw_cube(LCD_WIND_X0, 120, LCD_WIND_Y0, 120);
-	//st7789_draw_circle_bold(120, 120, 80, 20, ST7789_CIRCLE_BOLD_STEP_IN);
-	//st7789_draw_pixel(100, 100, 1);
+	//st7789_a_draw_char(0, 0, 'a');
+	char buf[] = "a:134.64\nr:2.54";
+	st7789_a_draw_string(0, 40, sizeof(buf) - 1, buf);
   	/* Infinite loop */
   	while(1)
   	{
@@ -146,12 +146,14 @@ int main()
   		GPIO_SetBit(GPIO0, GPIO_Pin_6);
   		delayMillis(500);
 #else
-		//st7789_set_draw_pos(0, 0);
-  		//st7789_draw_pixel(100, 100, 1);
-  		//st7789_fill_bw(0);
-  		//st7789_set_draw_pos(0, 0);
-		//st7789_set_draw_pos(0, 0);
-  		//st7789_fill_bw(1);
+#	if 0
+  		st7789_set_draw_pos(0, 0);
+  		st7789_draw_pixel(100, 100);
+  		st7789_fill_bw(0);
+  		st7789_set_draw_pos(0, 0);
+		st7789_set_draw_pos(0, 0);
+  		st7789_fill_bw(1);
+#	endif
 #endif
   	}
 
