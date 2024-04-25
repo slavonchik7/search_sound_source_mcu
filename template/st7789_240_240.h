@@ -1,7 +1,7 @@
 /*
  * st7789_240_240.h
  *
- *  Created on: 20 апр. 2024 г.
+ *  Created on: 20 Р°РїСЂ. 2024 Рі.
  *      Author: christmas
  */
 
@@ -98,9 +98,18 @@
 #define SET_RD	ST7789_SET(RD)
 
 
+
 /* one bit is one pixel */
 //extern uint8_t st7789_fb[ST7789_FB_SIZE];
 
+typedef struct UB_Font_t {
+  const uint16_t *table;
+  uint16_t width;
+  uint16_t height;
+}UB_Font;
+
+
+extern const uint16_t Arial_14x22_Table[];
 
 void st7789_write_parall_byte(uint8_t byte);
 
@@ -126,7 +135,7 @@ void st7789_send_data(uint8_t data);
 void st7789_fill_bw(uint8_t bw /* 0 or 1 */); /* black white */
 void st7789_update(void);
 void st7789_draw_pixel(uint8_t x, uint8_t y);
-void st7789_draw_cube(uint8_t x, uint8_t x_size, uint8_t y, uint8_t y_size);
+void st7789_draw_cube(uint8_t x, uint8_t x_size, uint8_t y, uint8_t y_size, uint8_t bw);
 void st7789_set_draw_limits(uint8_t x_start, uint8_t x_end, uint8_t y_start, uint8_t y_end);
 
 /* the st7789_draw_circle() function draws a circle with a thickness
@@ -163,8 +172,17 @@ static void always_inline st7789_set_draw_pos(uint8_t x, uint8_t y)
 /* functions with the names st7789_a_* are similar in their
  * 	operation to the functions st7789_*, only they work
  * 	with a pre-limited area in accordance with the definitions
- * 	LCD_WIND_X0, LCD_WIND_X1, LCD_WIND_Y0, LCD_WIND_Y1 */
+ * 	LCD_WIND_X0, LCD_WIND_XSIZE, LCD_WIND_Y0, LCD_WIND_YSIZE */
 
 void st7789_a_fill_bw(uint8_t bw);
+void st7789_a_draw_char(uint8_t x, uint8_t y, uint8_t ch);
+
+static void always_inline st7789_a_clear_screen(void)
+{
+	st7789_draw_cube(LCD_WIND_X0, LCD_WIND_XSIZE, LCD_WIND_Y0, LCD_WIND_YSIZE, 0);
+}
+
+void st7789_a_draw_string(uint8_t x, uint8_t y,
+						uint8_t slen /* byte */, uint8_t *str);
 
 #endif /* SRC_ST7789_240_240_H_ */

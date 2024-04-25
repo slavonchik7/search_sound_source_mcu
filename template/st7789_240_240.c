@@ -332,26 +332,28 @@ void st7789_set_draw_limits(uint8_t x_start, uint8_t x_end, uint8_t y_start, uin
 	st7789_send_cmd(ST7789_2C_RAMWR); //write data
 }
 
-void st7789_draw_cube(uint8_t x, uint8_t x_size, uint8_t y, uint8_t y_size)
+void st7789_draw_cube(uint8_t x, uint8_t x_size, uint8_t y, uint8_t y_size, uint8_t bw)
 {
 	x_size += x;
 	y_size += y;
 
 	/* check */
 	uint8_t flag = y_size % 2;
+	uint8_t clr_h = bw ? 0xff : 0x00;
+	uint8_t clr_l = bw ? 0xf0 : 0x00;
 
 	while (x_size-- != x) {
 		st7789_set_draw_limits(x_size, x_size, y, y + y_size);
 		SET_DC;
 		CLR_CS;
 		for (uint8_t j = y; j < y_size; j += 2) {
-			LCD_WRTIE_WR(0xff);
-			LCD_WRTIE_WR(0xff);
-			LCD_WRTIE_WR(0xff);
+				LCD_WRTIE_WR(clr_h);
+				LCD_WRTIE_WR(clr_h);
+				LCD_WRTIE_WR(clr_h);
 		}
 		if (!flag) {
-			LCD_WRTIE_WR(0xff);
-			LCD_WRTIE_WR(0xf0); /* only low byte chapter */
+			LCD_WRTIE_WR(clr_h);
+			LCD_WRTIE_WR(clr_l); /* only low byte chapter */
 		}
 		SET_CS;
 	}
@@ -394,5 +396,78 @@ void st7789_draw_circle(uint8_t x0, uint8_t y0, uint8_t radius)
 	  radiusError += 2 * (((int16_t) y - (int16_t) x) + 1);
 	}
   }
+}
+
+
+/* the function draws a symbol on the display
+ *
+ * IMPORTANT!!!
+ * for rendering on the display, a 12-bit pixel
+ * 	format is used for 3 8-bit transactions,
+ * 	data on two pixels is sent to the display,
+ * therefore it is not possible to transfer 1 pixel
+ *	at a time, therefore a font multiple of 2 along the Ox axis
+ *	of the display was taken to draw 2 pixels at a time */
+static uint16_t *__ft = Arial_14x22_Table; /* font table ptr */
+static uint8_t __fh = 22; /* font height */
+static uint8_t __fw = 14; /* font width */
+void st7789_a_draw_char(uint8_t x, uint8_t y, uint8_t ch)
+{
+	const uint16_t *wert;
+	uint16_t xn,
+			 yn;
+
+	/* shifting the position of the symbol to the
+	 * 	rendering window specified in the config */
+	x += LCD_WIND_X0;
+	y += LCD_WIND_Y0;
+
+	/* i don't know why this is (ya prosto spizdil)
+	 * see for details: https://cxem.net/mc/mc311.php */
+	ch -= 32;
+	wert = &__ft[ch * __fh];
+
+	for (yn = 0; yn < __fh; yn++) {
+		register uint16_t mask = 0x8000;
+		st7789_set_draw_pos(x, yn + y);
+		for (xn = 0; xn < __fw; xn += 2) {
+			register uint16_t mask_shift = (mask >> 1);
+
+			SET_DC;
+			CLR_CS;
+
+			/* send two pixels by time */
+			LCD_WRTIE_WR((wert[yn] & mask) ? 0xff : 0x00);
+			LCD_WRTIE_WR(
+				((wert[yn] & mask) ? (0xf0) : (0x00))
+				| ((wert[yn] & (mask_shift)) ? (0x0f) : (0x00))
+			);
+			LCD_WRTIE_WR((wert[yn] & (mask_shift)) ? 0xff : 0x00);
+			/* 				*/
+
+			SET_CS;
+
+			mask >>= 2;
+		}
+	}
+}
+
+
+void st7789_a_draw_string(uint8_t x, uint8_t y,
+						uint8_t slen /* byte */, uint8_t *str)
+{
+	uint8_t cnt = 0;
+	uint8_t col = 0;
+	uint8_t line = 0;
+	for (; cnt < slen; cnt++) {
+		if (str[cnt] == '\n') {
+			line++;
+			col = 0;
+			continue;
+		}
+
+		st7789_a_draw_char(x + col * __fw, y + line * __fh, str[cnt]);
+		col++;
+	}
 }
 
