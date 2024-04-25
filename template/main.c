@@ -18,12 +18,15 @@ void initializeTimer();
 void initializeUART();
 void delayMillis(uint32_t ms);
 
+void draw_result(vector2_t *src, fpmath_t bearing);
+
+
 int writeByte(int b)
 {
 	UART_SendChar(UART0, (char)b);
 	return 0;
 }
-static vector2_t src = {FP(2.0), FP(5.0)};
+static vector2_t src = {FP(-5.1), FP(-5.0)};
 
 #ifdef TEST_ALGORITHM
 #if 0
@@ -98,65 +101,34 @@ int main()
   	initializeTimer();
   	initializeUART();
 
-#ifdef TEST_ALGORITHM
-  	//strio_set_f_putbyte(writeByte);
-
-  	//printf("\n\r");
 	prepare_test_data();
     preparing_values();
 	//print_src_ctx_info();
     //print_src_ctx_sorted_info();
     bearing_init();
     fpmath_t p = bearing();
-    //fmtdebug("bearing rad:%f,angle:%f\n\r", p, RAD_TO_ANGLE(p));
 
-
-#if 1
-    //fmtdebug("start search!\n\r");
     vector2_t msrc;
-  	search_sound_source(&msrc, p);
-  	//fmtdebug("src: (%f,%f)\n\r", msrc.x, msrc.y);
-  	//fmtdebug("end search!\n\r");
-#else
-  	for (fpmath_t i = FP(1.0); i < 10.0; i += FP(1.0)) {
-  		vector2_t test;
-  		test.x = i / FP(2.0);
-  		test.y = i;
-  		fpmath_t res = deviation_src_ru2377594C1(&test);
-  		fmtdebug("src: (%f, %f), err: %f\r\n", test.x, test.y, res);
-  	}
-#endif
-#endif /* TEST_ALGORITHM */
+  	search_sound_source(&msrc, &p);
 
 	st7789_init_new();
 	st7789_set_draw_pos(0, 0);
 	st7789_fill_bw(0);
-	st7789_draw_circle_bold(120, 120, 120, 4, ST7789_CIRCLE_BOLD_STEP_IN);
-	//st7789_a_draw_char(0, 0, 'a');
-	char buf[] = "a:134.64\nr:2.54";
-	st7789_a_draw_string(0, 40, sizeof(buf) - 1, buf);
+	st7789_draw_circle_bold(LCD_RES_CIRCLE_CNTR_X,
+							LCD_RES_CIRCLE_CNTR_Y,
+							LCD_RES_CIRCLE_RADIUS,
+							4,
+							ST7789_CIRCLE_BOLD_STEP_IN);
+	draw_result(&msrc, p);
+
   	/* Infinite loop */
   	while(1)
   	{
-
-#if 0
-  		//fmtdebug("coreClock: %d, bearing: %d\n\r", SystemCoreClock, p++);
   		GPIO_ResetBit(GPIO0, GPIO_Pin_6);
   		delayMillis(500);
   		GPIO_SetBit(GPIO0, GPIO_Pin_6);
   		delayMillis(500);
-#else
-#	if 0
-  		st7789_set_draw_pos(0, 0);
-  		st7789_draw_pixel(100, 100);
-  		st7789_fill_bw(0);
-  		st7789_set_draw_pos(0, 0);
-		st7789_set_draw_pos(0, 0);
-  		st7789_fill_bw(1);
-#	endif
-#endif
   	}
-
 
     return 0;
 }
@@ -243,3 +215,98 @@ void delayMillis(uint32_t ms) {
 	TIMER_SetValue(TIMER0, 0);
 }
 #endif
+
+uint16_t font_colon[] =
+{
+	0x0000,0x0000,0x0000,0x0000,0x0300,0x0300,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0300,0x0300,0x0000,0x0000,0x0000,0x0000,0x0000, // Ascii = [:]
+};
+uint16_t font_r[] =
+{
+	0x0000,0x0000,0x0000,0x0000,0x31C0,0x1BE0,0x1C70,0x1820,0x1800,0x1800,0x1800,0x1800,0x1800,0x1800,0x1800,0x1800,0x1800,0x0000,0x0000,0x0000,0x0000,0x0000, // Ascii = [r]
+};
+uint16_t font_a[] =
+{
+	0x0000,0x0000,0x0000,0x0000,0x0FC0,0x1FE0,0x3870,0x3030,0x0030,0x03F0,0x1FF0,0x3C30,0x3030,0x3070,0x38F0,0x1FB0,0x0F18,0x0000,0x0000,0x0000,0x0000,0x0000, // Ascii = [a]
+};
+uint16_t font_dot[] =
+{
+	0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0300,0x0300,0x0000,0x0000,0x0000,0x0000,0x0000, // Ascii = [.]
+};
+uint16_t font_numbers_table[] =
+{
+	0x0780,0x0FC0,0x1CE0,0x1860,0x3030,0x3030,0x3030,0x3330,0x3330,0x3030,0x3030,0x3030,0x3030,0x1860,0x1CE0,0x0FC0,0x0780,0x0000,0x0000,0x0000,0x0000,0x0000, // Ascii = [0]
+	0x0180,0x0180,0x0380,0x0F80,0x1D80,0x1180,0x0180,0x0180,0x0180,0x0180,0x0180,0x0180,0x0180,0x0180,0x0180,0x0180,0x0180,0x0000,0x0000,0x0000,0x0000,0x0000, // Ascii = [1]
+	0x07C0,0x1FE0,0x1860,0x3030,0x3030,0x0030,0x0030,0x0060,0x0060,0x00C0,0x0180,0x0700,0x0C00,0x1800,0x3000,0x3FF0,0x3FF0,0x0000,0x0000,0x0000,0x0000,0x0000, // Ascii = [2]
+	0x0F80,0x1FC0,0x18E0,0x3060,0x3060,0x0060,0x00C0,0x07C0,0x07C0,0x0060,0x0030,0x0030,0x3030,0x3030,0x1860,0x1FE0,0x0780,0x0000,0x0000,0x0000,0x0000,0x0000, // Ascii = [3]
+	0x00C0,0x01C0,0x01C0,0x03C0,0x03C0,0x06C0,0x0CC0,0x0CC0,0x18C0,0x18C0,0x30C0,0x3FF0,0x3FF0,0x00C0,0x00C0,0x00C0,0x00C0,0x0000,0x0000,0x0000,0x0000,0x0000, // Ascii = [4]
+	0x3FE0,0x3FE0,0x3000,0x3000,0x3000,0x3780,0x3FC0,0x3860,0x3070,0x0030,0x0030,0x0030,0x3030,0x3070,0x18E0,0x1FC0,0x0780,0x0000,0x0000,0x0000,0x0000,0x0000, // Ascii = [5]
+	0x07C0,0x0FE0,0x1C70,0x1830,0x3800,0x3000,0x33C0,0x37E0,0x3860,0x3030,0x3030,0x3030,0x3030,0x1870,0x1860,0x0FE0,0x0780,0x0000,0x0000,0x0000,0x0000,0x0000, // Ascii = [6]
+	0x3FF0,0x3FF0,0x0030,0x0060,0x00C0,0x00C0,0x0180,0x0180,0x0300,0x0300,0x0600,0x0600,0x0600,0x0400,0x0C00,0x0C00,0x0C00,0x0000,0x0000,0x0000,0x0000,0x0000, // Ascii = [7]
+	0x0780,0x0FC0,0x1CE0,0x1860,0x1860,0x1860,0x0CC0,0x0300,0x1FC0,0x1860,0x3030,0x3030,0x3030,0x3030,0x1860,0x1FE0,0x0780,0x0000,0x0000,0x0000,0x0000,0x0000, // Ascii = [8]
+	0x0780,0x1FC0,0x1C60,0x3820,0x3030,0x3030,0x3030,0x3030,0x1870,0x1FB0,0x0F30,0x0030,0x0070,0x3060,0x38E0,0x1FC0,0x0F80,0x0000,0x0000,0x0000,0x0000,0x0000, // Ascii = [9]
+};
+
+
+#define __GETP_NUM_WRET(ch) &font_numbers_table[(ch - '0') * __CH_H]
+
+static void __draw_result_float_str(uint8_t x0, uint8_t y0, uint8_t slen /* byte */, uint8_t *str)
+{
+	uint8_t cnt = 0;
+	uint8_t col = 0;
+	for (; cnt < slen; cnt++) {
+		if (str[cnt] == '.')
+			__st7789_a_draw_char_raw(x0 + col * __CH_W, y0, font_dot);
+		else
+			__st7789_a_draw_char_raw(x0 + col * __CH_W, y0, __GETP_NUM_WRET(str[cnt]));
+
+		col++;
+	}
+}
+
+
+void draw_result(vector2_t *src, fpmath_t bearing)
+{
+	uint8_t buf[16];
+	uint8_t len;
+
+/* radius of the circle on the display */
+#define LCD_RES_CIRCLE_RADIUS 	120
+#define LCD_RES_CIRCLE_CNTR_X	120
+#define LCD_RES_CIRCLE_CNTR_Y	120
+
+	/* 'a' */
+	__st7789_a_draw_char_raw(LCD_WIND_X0,
+							40 + LCD_WIND_Y0,
+								font_a);
+	/* ':' */
+	__st7789_a_draw_char_raw(LCD_WIND_X0 + __CH_W,
+							40 + LCD_WIND_Y0,
+							font_colon);
+
+	/* angle in degrees */
+	len = (uint8_t)ftos(bearing * div_180_pi, buf, LCD_RES_AFTERPOINT);
+	__draw_result_float_str(LCD_WIND_X0 + __CH_W * 2,
+							40 + LCD_WIND_Y0,
+							len, buf);
+
+	/* 'r' */
+	__st7789_a_draw_char_raw(LCD_WIND_X0,
+							45 + LCD_WIND_Y0 + __CH_H,
+							font_r);
+	/* ':' */
+	__st7789_a_draw_char_raw(LCD_WIND_X0 + __CH_W,
+							45 + LCD_WIND_Y0 + __CH_H,
+							font_colon);
+
+	/* distance to sound source */
+	len = (uint8_t)ftos(la_pnorm2(src->x, src->y), buf, LCD_RES_AFTERPOINT);
+	__draw_result_float_str(LCD_WIND_X0 + __CH_W * 2,
+							45 + LCD_WIND_Y0 + __CH_H,
+							len, buf);
+
+	/* draw point marker */
+	st7789_draw_circle_bold(
+			 120 + (int16_t)((LCD_RES_CIRCLE_RADIUS - 18) * mycos(bearing)),
+			 120 - (int16_t)((LCD_RES_CIRCLE_RADIUS - 18) * mysin(bearing)),
+			 10, 9, ST7789_CIRCLE_BOLD_STEP_IN);
+}
