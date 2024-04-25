@@ -79,14 +79,14 @@
 #ifndef LCD_WIND_X0
 #	define LCD_WIND_X0 60
 #endif
-#ifndef LCD_WIND_X1
-#	define LCD_WIND_X1 180
+#ifndef LCD_WIND_XSIZE
+#	define LCD_WIND_XSIZE 120
 #endif
 #ifndef LCD_WIND_Y0
 #	define LCD_WIND_Y0 60
 #endif
-#ifndef LCD_WIND_Y1
-#	define LCD_WIND_Y1 180
+#ifndef LCD_WIND_YSIZE
+#	define LCD_WIND_YSIZE 120
 #endif
 
 /* ---------- end config defines ---------- */
