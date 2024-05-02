@@ -89,11 +89,18 @@
 #	define LCD_WIND_YSIZE 120
 #endif
 
-
+/* the definition affects the screen rendering speed
+ * it affects the LCD_WRITE_WR() function, which,
+ * 	if set to true, is implemented as a function,
+ * 	otherwise as a separate function. */
+#ifndef LCD_FAST_WRITE
+#	define LCD_FAST_WRITE 1
+//#	define LCD_FAST_WRITE 0
+#endif
 
 /* the number of decimal places to
  * 	draw the result on the display */
-#define LCD_RES_AFTERPOINT 		2
+#define LCD_RES_AFTERPOINT 		3
 
 /* ---------- end config defines ---------- */
 

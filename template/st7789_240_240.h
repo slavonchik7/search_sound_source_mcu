@@ -115,19 +115,17 @@ void st7789_write_parall_byte(uint8_t byte);
 
 #define LCD_WRITE(x) st7789_write_parall_byte(x)
 
-#define LCD_WRTIE_WR(x) \
+#if LCD_FAST_WRITE
+#define LCD_WRITE_WR(x) \
 	do { \
 		st7789_write_parall_byte(x); \
 		CLR_WR; \
 		SET_WR; \
 	} while (0)
-
-#if 0
-static inline void LCD_WRTIE_WR(uint8_t b)
-{
-	__LCD_WRTIE_WR(b);
-}
+#else
+void LCD_WRITE_WR(uint8_t x);
 #endif
+
 
 void st7789_init_new(void);
 void st7789_send_cmd(uint8_t cmd);
@@ -160,6 +158,7 @@ static void always_inline st7789_set_draw_pos(uint8_t x, uint8_t y)
 {
 	st7789_set_draw_limits(x, 240, y, 240);
 }
+
 
 void st7789_draw_circle_bold(uint8_t x0, uint8_t y0,
 							uint8_t radius, uint8_t bold, int8_t step);

@@ -314,7 +314,7 @@ static void __search_sound_source(vector2_t *src, fpmath_t *bearing)
 	__lsarg_sss_min.angle = __lsarg_sss_first.angle;
 	__lsarg_sss_max.angle = __lsarg_sss_first.angle;
 	int n=0;
-	while ((rmax - rmin) > SRC_SEARCH_EPSI) {
+	while (MYABS(rmax - rmin) > SRC_SEARCH_EPSI) {
 		dr = (rmax - rmin) / FP(3.0);
 
 		__lsarg_sss_min.r = rmin + dr;
@@ -378,26 +378,26 @@ void search_sound_source(vector2_t *src, fpmath_t *bearing)
 
 		__lsarg_sss_first.angle = *bearing;
 		__lsarg_sss_first.r 	= (SRC_MAX_DISTANCE - SRC_MIN_DISTANCE) / FP(2.0);
-		__lsarg_sss_first.lpl 	= FP(-0.1);
-		__lsarg_sss_first.lpr 	= FP(0.1);
-		__lsarg_sss_first.dlp 	= FP(0.002);
+		__lsarg_sss_first.lpl 	= FP(-0.06);
+		__lsarg_sss_first.lpr 	= FP(0.06);
+		__lsarg_sss_first.dlp 	= FP(0.001);
 		__lsarg_sss_first.deviation = FP(0.0);
 		__lsarg_sss_first.point.x = FP(0.0);
 		__lsarg_sss_first.point.y = FP(0.0);
 		__lsarg_sss_first.reslp   = FP(0.0);
 
-		__lsarg_sss_min.lpl 	= FP(-0.005);
-		__lsarg_sss_min.lpr 	= FP(0.005);
-		__lsarg_sss_min.dlp 	= FP(0.0002);
+		__lsarg_sss_min.lpl 	= FP(-0.004);
+		__lsarg_sss_min.lpr 	= FP(0.004);
+		__lsarg_sss_min.dlp 	= FP(0.0001);
 		__lsarg_sss_min.deviation = FP(0.0);
 		__lsarg_sss_min.point.x = FP(0.0);
 		__lsarg_sss_min.point.y = FP(0.0);
 		__lsarg_sss_min.r 		= FP(0.0);
 		__lsarg_sss_min.reslp   = FP(0.0);
 
-		__lsarg_sss_max.lpl 	= FP(-0.005);
-		__lsarg_sss_max.lpr 	= FP(0.005);
-		__lsarg_sss_max.dlp 	= FP(0.0002);
+		__lsarg_sss_max.lpl 	= FP(-0.004);
+		__lsarg_sss_max.lpr 	= FP(0.004);
+		__lsarg_sss_max.dlp 	= FP(0.0001);
 		__lsarg_sss_max.deviation = FP(0.0);
 		__lsarg_sss_max.point.x = FP(0.0);
 		__lsarg_sss_max.point.y = FP(0.0);
@@ -410,26 +410,26 @@ void search_sound_source(vector2_t *src, fpmath_t *bearing)
 
 		__lsarg_sss_first.angle = *bearing;
 		__lsarg_sss_first.r 	= (SRC_MAX_DISTANCE - SRC_MIN_DISTANCE) / FP(2.0);
-		__lsarg_sss_first.lpl 	= FP(-0.1);
-		__lsarg_sss_first.lpr 	= FP(0.1);
+		__lsarg_sss_first.lpl 	= FP(-0.5);
+		__lsarg_sss_first.lpr 	= FP(0.5);
 		__lsarg_sss_first.dlp 	= FP(0.001);
 		__lsarg_sss_first.deviation = FP(0.0);
 		__lsarg_sss_first.point.x = FP(0.0);
 		__lsarg_sss_first.point.y = FP(0.0);
 		__lsarg_sss_first.reslp   = FP(0.0);
 
-		__lsarg_sss_min.lpl 	= FP(-0.001);
-		__lsarg_sss_min.lpr 	= FP(0.001);
-		__lsarg_sss_min.dlp 	= FP(0.0005);
+		__lsarg_sss_min.lpl 	= FP(-0.01);
+		__lsarg_sss_min.lpr 	= FP(0.01);
+		__lsarg_sss_min.dlp 	= FP(0.0004);
 		__lsarg_sss_min.deviation = FP(0.0);
 		__lsarg_sss_min.point.x = FP(0.0);
 		__lsarg_sss_min.point.y = FP(0.0);
 		__lsarg_sss_min.r 		= FP(0.0);
 		__lsarg_sss_min.reslp   = FP(0.0);
 
-		__lsarg_sss_max.lpl 	= FP(-0.001);
-		__lsarg_sss_max.lpr 	= FP(0.001);
-		__lsarg_sss_max.dlp 	= FP(0.0005);
+		__lsarg_sss_max.lpl 	= FP(-0.01);
+		__lsarg_sss_max.lpr 	= FP(0.01);
+		__lsarg_sss_max.dlp 	= FP(0.0004);
 		__lsarg_sss_max.deviation = FP(0.0);
 		__lsarg_sss_max.point.x = FP(0.0);
 		__lsarg_sss_max.point.y = FP(0.0);

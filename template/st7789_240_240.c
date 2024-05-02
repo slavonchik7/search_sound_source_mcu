@@ -147,6 +147,15 @@ void st7789_write_parall_byte(uint8_t byte)
 
 }
 
+#if !LCD_FAST_WRITE
+void LCD_WRITE_WR(uint8_t x)
+{
+	st7789_write_parall_byte(x);
+	CLR_WR;
+	SET_WR;
+}
+#endif
+
 void st7789_send_cmd(uint8_t cmd)
 {
 	// Select the LCD's command register
@@ -282,9 +291,9 @@ void st7789_fill_bw(uint8_t bw)
 	for (i = 0; i < ST7789_FB_SIZE; i++)
 	{
 #define _HELPME \
-	LCD_WRTIE_WR((bw) ? 0xff : 0x00); \
-	LCD_WRTIE_WR((bw) ? 0xff : 0x00); \
-	LCD_WRTIE_WR((bw) ? 0xff : 0x00);
+	LCD_WRITE_WR((bw) ? 0xff : 0x00); \
+	LCD_WRITE_WR((bw) ? 0xff : 0x00); \
+	LCD_WRITE_WR((bw) ? 0xff : 0x00);
 
 		_HELPME
 		_HELPME
@@ -300,9 +309,9 @@ void st7789_draw_pixel(uint8_t x, uint8_t y)
 	st7789_set_draw_limits(x, x, y, y);
 	SET_DC;
 	CLR_CS;
-	LCD_WRTIE_WR(0xff);
-	LCD_WRTIE_WR(0xff); /* only low byte chapter */
-	LCD_WRTIE_WR(0xff);
+	LCD_WRITE_WR(0xff);
+	LCD_WRITE_WR(0xff); /* only low byte chapter */
+	LCD_WRITE_WR(0xff);
 	SET_CS;
 }
 
@@ -348,13 +357,13 @@ void st7789_draw_cube(uint8_t x, uint8_t x_size, uint8_t y, uint8_t y_size, uint
 		SET_DC;
 		CLR_CS;
 		for (uint8_t j = y; j < y_size; j += 2) {
-				LCD_WRTIE_WR(clr_h);
-				LCD_WRTIE_WR(clr_h);
-				LCD_WRTIE_WR(clr_h);
+				LCD_WRITE_WR(clr_h);
+				LCD_WRITE_WR(clr_h);
+				LCD_WRITE_WR(clr_h);
 		}
 		if (!flag) {
-			LCD_WRTIE_WR(clr_h);
-			LCD_WRTIE_WR(clr_l); /* only low byte chapter */
+			LCD_WRITE_WR(clr_h);
+			LCD_WRITE_WR(clr_l); /* only low byte chapter */
 		}
 		SET_CS;
 	}
@@ -418,7 +427,6 @@ void st7789_draw_circle_bold(uint8_t x0, uint8_t y0,
  * therefore it is not possible to transfer 1 pixel
  *	at a time, therefore a font multiple of 2 along the Ox axis
  *	of the display was taken to draw 2 pixels at a time */
-static uint16_t *__ft = Arial_14x22_Table; /* font table ptr */
 static uint8_t __fh = __ST7789_FONT_HEIGHT; /* font height */
 static uint8_t __fw = __ST7789_FONT_WIDTH; /* font width */
 
@@ -427,22 +435,22 @@ static void __st7789_a_draw_char(uint8_t x, uint8_t y, uint16_t *wert)
 	uint16_t xn,
 			 yn;
 
-	for (yn = 0; yn < __fh; yn++) {
+	for (yn = 0; yn < __ST7789_FONT_HEIGHT; yn++) {
 		register uint16_t mask = 0x8000;
 		st7789_set_draw_pos(x, yn + y);
-		for (xn = 0; xn < __fw; xn += 2) {
+		for (xn = 0; xn < __ST7789_FONT_WIDTH; xn += 2) {
 			register uint16_t mask_shift = (mask >> 1);
 
 			SET_DC;
 			CLR_CS;
 
 			/* send two pixels by time */
-			LCD_WRTIE_WR((wert[yn] & mask) ? 0xff : 0x00);
-			LCD_WRTIE_WR(
+			LCD_WRITE_WR((wert[yn] & mask) ? 0xff : 0x00);
+			LCD_WRITE_WR(
 				((wert[yn] & mask) ? (0xf0) : (0x00))
 				| ((wert[yn] & (mask_shift)) ? (0x0f) : (0x00))
 			);
-			LCD_WRTIE_WR((wert[yn] & (mask_shift)) ? 0xff : 0x00);
+			LCD_WRITE_WR((wert[yn] & (mask_shift)) ? 0xff : 0x00);
 			/* 				*/
 
 			SET_CS;
@@ -453,9 +461,11 @@ static void __st7789_a_draw_char(uint8_t x, uint8_t y, uint16_t *wert)
 }
 
 
+#if 1
 /* the function finds a pointer to the raw
  * 	character data in the font table
  * 	and causes the character to be drawn */
+static uint16_t *__ft = Arial_14x22_Table; /* font table ptr */
 void st7789_a_draw_char(uint8_t x, uint8_t y, uint8_t ch)
 {
 	/* shifting the position of the symbol to the
@@ -468,11 +478,6 @@ void st7789_a_draw_char(uint8_t x, uint8_t y, uint8_t ch)
 	ch -= 32;
 
 	__st7789_a_draw_char(x, y, &__ft[ch * __fh]);
-}
-
-void __st7789_a_draw_char_raw(uint8_t x, uint8_t y, uint16_t *wert)
-{
-	__st7789_a_draw_char(x, y, wert);
 }
 
 void st7789_a_draw_string(uint8_t x, uint8_t y,
@@ -492,4 +497,12 @@ void st7789_a_draw_string(uint8_t x, uint8_t y,
 		col++;
 	}
 }
+#endif
+
+void __st7789_a_draw_char_raw(uint8_t x, uint8_t y, uint16_t *wert)
+{
+	__st7789_a_draw_char(x, y, wert);
+}
+
+
 

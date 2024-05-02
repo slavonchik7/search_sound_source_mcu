@@ -24,7 +24,7 @@
 #endif /* SOUND_SPEED */
 
 #ifndef SENSORS_RADIUS
-#   define SENSORS_RADIUS FP(0.15)
+#   define SENSORS_RADIUS FP(0.08)
 #endif /* SENSORS_RADIUS */
 
 /* ============================================================================ */
@@ -33,11 +33,11 @@
  * this system is not designed to search for a sound source
  * further than 10 meters, even if it is able to do so */
 #ifndef SRC_MIN_DISTANCE /* in meters */
-#	define SRC_MIN_DISTANCE FP(0.3)
+#	define SRC_MIN_DISTANCE FP(0.2)
 #endif /* SRC_MIN_DISTANCE */
 
 #ifndef SRC_MAX_DISTANCE /* in meters */
-#	define SRC_MAX_DISTANCE FP(15.0)
+#	define SRC_MAX_DISTANCE FP(20.0)
 #endif /* SRC_MAX_DISTANCE */
 
 /* the definition specifies with what accuracy
